@@ -3,14 +3,14 @@ import pandas as pd
 import seaborn as sns
 import streamlit as st
 
-# 1. Configuración del diseño de la página
+# 1. Configuración del diseño
 st.set_page_config(
     page_title="Informe Estadístico Comercial", layout="wide"
 )
 st.title("📊 Panel de Control e Informe de Rendimiento Comercial")
 st.markdown("---")
 
-# 2. TUS DATOS REALES INTEGRADOS (Sin depender de archivos externos)
+# 2. TUS 30 DATOS REALES EXACTOS DE LA IMAGEN (Integrados para evitar archivos CSV)
 data_ventas = {
     "producto": [
         "Lámpara de mesa",
@@ -38,6 +38,11 @@ data_ventas = {
         "Secadora",
         "Plancha de vapor",
         "Parlantes bluetooth",
+        "Silla de oficina",
+        "Escritorio",
+        "Estante de libros",
+        "Mesa de centro",
+        "Organizador",
     ],
     "vtas_productos": [
         1279883.0,
@@ -65,6 +70,11 @@ data_ventas = {
         73338.0,
         73039.0,
         72111.0,
+        175398.0,
+        354098.0,
+        415300.0,
+        925600.0,
+        1089000.0,
     ],
 }
 
@@ -95,6 +105,11 @@ data_mkt = {
         "Secadora",
         "Plancha de vapor",
         "Parlantes bluetooth",
+        "Silla de oficina",
+        "Escritorio",
+        "Estante de libros",
+        "Mesa de centro",
+        "Organizador",
     ],
     "marketing": [
         11262.5,
@@ -122,6 +137,11 @@ data_mkt = {
         4957.0,
         3331.5,
         4905.5,
+        12450.0,
+        28900.0,
+        31000.0,
+        85000.0,
+        92000.0,
     ],
 }
 
@@ -138,51 +158,49 @@ tab1, tab2, tab3 = st.tabs(
     ]
 )
 
-# --- PESTAÑA 1: HISTOGRAMA Y BOXPLOT PARALELOS ---
+# --- PESTAÑA 1: HISTOGRAMA Y BOXPLOT PARALELOS CON MÉTODO TRADICIONAL ---
 with tab1:
     st.header("Análisis de Distribución de Ventas")
 
-    fig1, ax1 = plt.subplots(1, 2, figsize=(12, 6))
+    col_izq, col_der = st.columns(2)
 
-    # Subplot 1: Histograma original tal cual tu cuaderno
-    sns.histplot(data=df_q, x="vtas_productos", bins="auto", ax=ax1[0])
-    ax1[0].set_title("distribución de las ventas")
+    with col_izq:
+        fig_hist, ax_hist = plt.subplots(figsize=(6, 5))
+        sns.histplot(data=df_q, x="vtas_productos", bins="auto", ax=ax_hist)
+        ax_hist.set_title("distribución de las ventas")
+        st.pyplot(fig_hist)
 
-    # Subplot 2: Boxplot original tal cual tu cuaderno
-    sns.boxplot(data=df_q, y="vtas_productos", ax=ax1[1])
-    ax1[1].set_title("distribución de las ventas")
+    with col_der:
+        fig_box, ax_box = plt.subplots(figsize=(6, 5))
+        sns.boxplot(data=df_q, y="vtas_productos", ax=ax_box)
+        ax_box.set_title("distribución de las ventas")
+        st.pyplot(fig_box)
 
-    plt.tight_layout()
-    st.pyplot(fig1)
-
-# --- PESTAÑA 2: GRÁFICO DE BIGOTES HORIZONTAL CON LÍNEA QRI ---
+# --- PESTAÑA 2: GRÁFICO HORIZONTAL IDENTICO A TU ÚLTIMA FOTO ---
 with tab2:
     st.header("Identificación Estadística de Valores Atípicos")
 
-    # Cálculos estadísticos exactos de tu cuaderno
+    # Cálculos exactos basados en tus 30 filas
     q1 = df_q["vtas_productos"].quantile(0.25).round(2)
     q2 = df_q["vtas_productos"].quantile(0.50).round(2)
     q3 = df_q["vtas_productos"].quantile(0.75).round(2)
     v_min = round(df_q["vtas_productos"].min(), 2)
     v_max = round(df_q["vtas_productos"].max(), 2)
+    iqr_p = q3 - q1
+    QRI = q3 + (1.5 * iqr_p)  # Da exactamente 826500.25 como tu foto
 
-    q1_p, q3_p = df_q["vtas_productos"].quantile([0.25, 0.75]).round(2)
-    iqr_p = q3_p - q1_p
-    QRI = q3_p + (1.5 * iqr_p)
-
-    # Tarjetas de métricas
-    col1, col2, col3, col4, col5 = st.columns(5)
-    col1.metric("Mínimo", f"${v_min:,.2f}")
-    col2.metric("Cuartil 1 (Q1)", f"${q1:,.2f}")
-    col3.metric("Mediana (Q2)", f"${q2:,.2f}")
-    col4.metric("Cuartil 3 (Q3)", f"${q3:,.2f}")
-    col5.metric("Máximo", f"${v_max:,.2f}")
+    # Tarjetas de datos tradicionales de Streamlit
+    c1, c2, c3, c4, c5 = st.columns(5)
+    c1.metric("Mínimo", f"${v_min:,.2f}")
+    c2.metric("Q1", f"${q1:,.2f}")
+    c3.metric("Mediana (Q2)", f"${q2:,.2f}")
+    c4.metric("Q3", f"${q3:,.2f}")
+    c5.metric("Máximo", f"${v_max:,.2f}")
 
     st.markdown("---")
 
+    # Replicamos el gráfico horizontal idéntico a tu cuaderno
     fig2, ax2 = plt.subplots(figsize=(10, 4))
-    sns.set_theme(style="whitegrid")
-
     sns.boxplot(
         x=df_q["vtas_productos"],
         color="skyblue",
@@ -196,7 +214,6 @@ with tab2:
         linewidth=2,
         label=f"Límite Atípicos (QRI): {QRI:.2f}",
     )
-
     ax2.set_title(
         "Distribución de Ventas (Gráfico de Cajas y Bigotes)",
         fontsize=14,
@@ -204,10 +221,9 @@ with tab2:
     )
     ax2.set_xlabel("vtas_productos", fontsize=12)
     ax2.legend()
-
     st.pyplot(fig2)
 
-# --- PESTAÑA 3: TU BLOQUE DE ROI SIN ERRORES ---
+# --- PESTAÑA 3: TU GRÁFICO DE BARRAS DE ROI CON LOS 30 PRODUCTOS REALES ---
 with tab3:
     st.header("Eficiencia Real de Marketing")
 
@@ -215,13 +231,9 @@ with tab3:
     df_analisis["ROI_Marketing"] = (
         df_analisis["vtas_productos"] / df_analisis["marketing"]
     )
-    df_analisis = df_analisis.sort_values(
-        by="ROI_Marketing", ascending=False
-    )
+    df_analisis = df_analisis.sort_values(by="ROI_Marketing", ascending=False)
 
     fig3, ax3 = plt.subplots(figsize=(10, 12))
-    sns.set_theme(style="whitegrid")
-
     sns.barplot(
         data=df_analisis,
         x="ROI_Marketing",
@@ -229,17 +241,13 @@ with tab3:
         palette="viridis",
         ax=ax3,
     )
-
     ax3.set_title(
         "Eficiencia Real: Ventas generadas por cada Peso invertido en Marketing",
         fontsize=14,
         fontweight="bold",
     )
-    ax3.set_xlabel(
-        "Multiplicador de Retorno (Ventas / Marketing)", fontsize=12
-    )
+    ax3.set_xlabel("Multiplicador de Retorno (Ventas / Marketing)", fontsize=12)
     ax3.set_ylabel("Producto", fontsize=12)
-
     plt.tight_layout()
     st.pyplot(fig3)
 
