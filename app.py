@@ -1,8 +1,28 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+from IPython.display import display, Markdown
 
+# 1. Tus cálculos de cuartiles y límites
+q1 = df_q['vtas_productos'].quantile(0.25).round(2)
+q2 = df_q ['vtas_productos'].quantile(0.50).round(2)
+q3 = df_q ['vtas_productos'].quantile(0.75).round(2)
+v_min = round(df_q['vtas_productos'].min(), 2)
+v_max = round(df_q['vtas_productos'].max(), 2)
+limites = (v_min, q1, q2, q3, v_max)
 
+display(Markdown(f"""
+### **Límites de los intervalos:**
+* **Mínimo (v_min):** {v_min}
+* **Primer Cuartil (q1):** {q1}
+* **Mediana (q2):** {q2}
+* **Tercer Cuartil (q3):** {q3}
+* **Máximo (v_max):** {v_max}
+"""))
 
+# Cálculos del IQR y límite superior de atípicos (QRI)
+q1_p, q3_p = df_q["vtas_productos"].quantile([0.25, 0.75]).round(2)
+iqr_p = q3_p - q1_p
+QRI = q3_p + (1.5 * iqr_p)
 
 # Aca comienza el codigo para visualizar grafico( lo anterior es solo para referenciar al lector)
 
