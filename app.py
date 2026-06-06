@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
-from IPython.display import display, Markdown
+
 
 # 1. Tus cálculos de cuartiles y límites
 q1 = df_q['vtas_productos'].quantile(0.25).round(2)
