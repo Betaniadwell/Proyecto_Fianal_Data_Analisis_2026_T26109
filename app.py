@@ -1,3 +1,4 @@
+%%writefile app.py
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -9,21 +10,42 @@ st.set_page_config(page_title="Informe Estadístico Comercial", layout="wide")
 st.title("📊 Panel de Control e Informe de Rendimiento Comercial")
 st.markdown("---")
 
-# 2. Creación de las Pestañas de Navegación Tradicionales
+# 2. Carga de los DataFrames reales
+@st.cache_data
+def cargar_datos_csv():
+    archivo_ventas = "datos_ventas_perfectos.csv"
+    archivo_mkt = "datos_roi_perfectos.csv"
+
+    if os.path.exists(archivo_ventas):
+        df_q = pd.read_csv(archivo_ventas)
+    else:
+        import glob
+        b = glob.glob("**/" + archivo_ventas, recursive=True)
+        df_q = pd.read_csv(b) if b else pd.DataFrame()
+
+    if os.path.exists(archivo_mkt):
+        agrup_mkt = pd.read_csv(archivo_mkt)
+    else:
+        import glob
+        b = glob.glob("**/" + archivo_mkt, recursive=True)
+        agrup_mkt = pd.read_csv(b) if b else pd.DataFrame()
+
+    return df_q, agrup_mkt
+
+df_q, agrup_prod_vtas_mkt = cargar_datos_csv()
+
+# 3. Creación de las Pestañas de Navegación Tradicionales
 tab1, tab2, tab3 = st.tabs([
     "📊 Distribución y Análisis Estadístico",
     "🎯 Eficiencia de Marketing (ROI)",
     "🌌 Gráfico de Dispersión Comercial"
 ])
 
-# --- PESTAÑA 1: DISTRIBUCIÓN Y BOXPLOT (DATOS REALES DE VENTAS) ---
+# --- PESTAÑA 1: DISTRIBUCIÓN Y BOXPLOT ---
 with tab1:
     st.header("Análisis de Distribución de Ventas")
     
-    if os.path.exists("datos_ventas_perfectos.csv"):
-        df_q = pd.read_csv("datos_ventas_perfectos.csv")
-        
-        # Separamos el espacio en 2 columnas tradicionales para mantener el tamaño original
+    if not df_q.empty:
         col_izq, col_der = st.columns(2)
         
         with col_izq:
@@ -38,14 +60,16 @@ with tab1:
             ax_box.set_title("Distribución de las Ventas (Caja y Bigotes)")
             st.pyplot(fig_box)
     else:
-        st.warning("⚠️ Por favor, sube el archivo 'datos_ventas_perfectos.csv' a GitHub para activar esta pestaña.")
+        st.warning("⚠️ No se pudieron cargar los datos de ventas para esta pestaña.")
 
 # --- PESTAÑA 2: EL GRÁFICO DE BARRAS DE ROI QUE YA QUEDÓ PERFECTO ---
 with tab2:
     st.header("Eficiencia Real de Marketing")
     
-    if os.path.exists("datos_roi_perfectos.csv"):
-        df_analisis = pd.read_csv("datos_roi_perfectos.csv")
+    if not agrup_prod_vtas_mkt.empty:
+        df_analisis = agrup_prod_vtas_mkt.copy()
+        df_analisis["ROI_Marketing"] = df_analisis["vtas_productos"] / df_analisis["marketing"]
+        df_analisis = df_analisis.sort_values(by="ROI_Marketing", ascending=False)
         
         fig_roi, ax_roi = plt.subplots(figsize=(10, 12))
         sns.set_theme(style="whitegrid")
@@ -58,78 +82,58 @@ with tab2:
         plt.tight_layout()
         st.pyplot(fig_roi)
     else:
-        st.warning("⚠️ Falta el archivo 'datos_roi_perfectos.csv' en tu GitHub.")
+        st.warning("⚠️ No se encontraron datos para calcular el ROI.")
 
-# --- PESTAÑA 3: TU GRÁFICO DE DISPERSIÓN COMERCIAL ---
-# --- PESTAÑA 3: TU GRÁFICO DE DISPERSIÓN COMERCIAL + CONCLUSIONES ESTRATÉGICAS ---
+# --- PESTAÑA 3: GRÁFICO DE DISPERSIÓN COMERCIAL + CONCLUSIONES ---
 with tab3:
     st.header("Análisis de Dispersión: Inversión vs. Ventas")
-    st.markdown(
-        "Este gráfico permite visualizar qué productos tienen mayor tracción"
-        " comercial en relación con su presupuesto asignado."
-    )
-
-    if os.path.exists("datos_roi_perfectos.csv"):
-        df_analisis = pd.read_csv("datos_roi_perfectos.csv")
-
-        if (
-            "marketing" in df_analisis.columns
-            and "vtas_productos" in df_analisis.columns
-        ):
-
-            # 1. Renderizamos el gráfico que ya quedó perfecto
+    st.markdown("Este gráfico permite visualizar qué productos tienen mayor tracción comercial en relación con su presupuesto asignado.")
+    
+    if not agrup_prod_vtas_mkt.empty:
+        df_analisis = agrup_prod_vtas_mkt.copy()
+        df_analisis["ROI_Marketing"] = df_analisis["vtas_productos"] / df_analisis["marketing"]
+        
+        if "marketing" in df_analisis.columns and "vtas_productos" in df_analisis.columns:
             fig_scat, ax_scat = plt.subplots(figsize=(10, 6))
             sns.set_theme(style="whitegrid")
-
+            
             sns.scatterplot(
-                data=df_analisis,
-                x="marketing",
-                y="vtas_productos",
-                hue="producto",
-                size="ROI_Marketing",
-                sizes=(40, 400),
-                palette="viridis",
+                data=df_analisis, 
+                x="marketing", 
+                y="vtas_productos", 
+                hue="producto", 
+                size="ROI_Marketing", 
+                sizes=(40, 400), 
+                palette="viridis", 
                 legend=False,
-                ax=ax_scat,
+                ax=ax_scat
             )
-
-            ax_scat.set_title(
-                "Relación entre Inversión en Publicidad y Ventas Totales",
-                fontsize=14,
-                fontweight="bold",
-            )
+            
+            ax_scat.set_title("Relación entre Inversión en Publicidad y Ventas Totales", fontsize=14, fontweight="bold")
             ax_scat.set_xlabel("Presupuesto de Marketing ($)", fontsize=12)
             ax_scat.set_ylabel("Ventas de Productos ($)", fontsize=12)
             plt.tight_layout()
             st.pyplot(fig_scat)
-
-            # 2. SECCIÓN NUEVA: CONCLUSIONES AUTOMÁTICAS E INTERPRETACIÓN
+            
             st.markdown("---")
             st.subheader("💡 Conclusiones y Diagnóstico Estratégico")
-
+            
             col_info1, col_info2 = st.columns(2)
-
             with col_info1:
                 st.success("""
                 **🚀 Oportunidades de Crecimiento (Cuadrante Superior Izquierdo):**
                 * Detectamos productos con **baja inversión en publicidad** que generan **ventas masivas** (cercanas a \$1.2M). 
                 * *Acción recomendada:* Incrementar el presupuesto de marketing en estos artículos de alta tracción orgánica.
                 """)
-
                 st.info("""
                 **📈 Motores de Caja Estables (Línea Central):**
                 * Las burbujas verdes demuestran un rendimiento constante entre \$600K y \$800K. Responden bien a aumentos de presupuesto, pero muestran un efecto de saturación al llegar al límite de su mercado.
                 """)
-
             with col_info2:
                 st.error("""
                 **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
                 * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
                 * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
                 """)
-
         else:
-            st.info(
-                "💡 El archivo exportado debe contener las columnas"
-                " 'marketing' y 'vtas_productos'."
-            )
+            st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
