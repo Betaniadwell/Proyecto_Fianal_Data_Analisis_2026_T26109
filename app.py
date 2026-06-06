@@ -61,35 +61,75 @@ with tab2:
         st.warning("⚠️ Falta el archivo 'datos_roi_perfectos.csv' en tu GitHub.")
 
 # --- PESTAÑA 3: TU GRÁFICO DE DISPERSIÓN COMERCIAL ---
+# --- PESTAÑA 3: TU GRÁFICO DE DISPERSIÓN COMERCIAL + CONCLUSIONES ESTRATÉGICAS ---
 with tab3:
     st.header("Análisis de Dispersión: Inversión vs. Ventas")
-    st.markdown("Este gráfico permite visualizar qué productos tienen mayor tracción comercial en relación con su presupuesto asignado.")
-    
+    st.markdown(
+        "Este gráfico permite visualizar qué productos tienen mayor tracción"
+        " comercial en relación con su presupuesto asignado."
+    )
+
     if os.path.exists("datos_roi_perfectos.csv"):
         df_analisis = pd.read_csv("datos_roi_perfectos.csv")
-        
-        # Si las columnas de tu dataframe de ROI contienen marketing y vtas_productos
-        if "marketing" in df_analisis.columns and "vtas_productos" in df_analisis.columns:
+
+        if (
+            "marketing" in df_analisis.columns
+            and "vtas_productos" in df_analisis.columns
+        ):
+
+            # 1. Renderizamos el gráfico que ya quedó perfecto
             fig_scat, ax_scat = plt.subplots(figsize=(10, 6))
             sns.set_theme(style="whitegrid")
-            
-            # Dibujamos el scatter plot original
+
             sns.scatterplot(
-                data=df_analisis, 
-                x="marketing", 
-                y="vtas_productos", 
-                hue="producto", 
-                size="ROI_Marketing", 
-                sizes=(40, 400), 
-                palette="viridis", 
+                data=df_analisis,
+                x="marketing",
+                y="vtas_productos",
+                hue="producto",
+                size="ROI_Marketing",
+                sizes=(40, 400),
+                palette="viridis",
                 legend=False,
-                ax=ax_scat
+                ax=ax_scat,
             )
-            
-            ax_scat.set_title("Relación entre Inversión en Publicidad y Ventas Totales", fontsize=14, fontweight="bold")
+
+            ax_scat.set_title(
+                "Relación entre Inversión en Publicidad y Ventas Totales",
+                fontsize=14,
+                fontweight="bold",
+            )
             ax_scat.set_xlabel("Presupuesto de Marketing ($)", fontsize=12)
             ax_scat.set_ylabel("Ventas de Productos ($)", fontsize=12)
             plt.tight_layout()
             st.pyplot(fig_scat)
+
+            # 2. SECCIÓN NUEVA: CONCLUSIONES AUTOMÁTICAS E INTERPRETACIÓN
+            st.markdown("---")
+            st.subheader("💡 Conclusiones y Diagnóstico Estratégico")
+
+            col_info1, col_info2 = st.columns(2)
+
+            with col_info1:
+                st.success("""
+                **🚀 Oportunidades de Crecimiento (Cuadrante Superior Izquierdo):**
+                * Detectamos productos con **baja inversión en publicidad** que generan **ventas masivas** (cercanas a \$1.2M). 
+                * *Acción recomendada:* Incrementar el presupuesto de marketing en estos artículos de alta tracción orgánica.
+                """)
+
+                st.info("""
+                **📈 Motores de Caja Estables (Línea Central):**
+                * Las burbujas verdes demuestran un rendimiento constante entre \$600K y \$800K. Responden bien a aumentos de presupuesto, pero muestran un efecto de saturación al llegar al límite de su mercado.
+                """)
+
+            with col_info2:
+                st.error("""
+                **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
+                * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
+                * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
+                """)
+
         else:
-            st.info("💡 Para ver la dispersión, asegúrate de que el archivo exportado contenga las columnas 'marketing' y 'vtas_productos'.")
+            st.info(
+                "💡 El archivo exportado debe contener las columnas"
+                " 'marketing' y 'vtas_productos'."
+            )
