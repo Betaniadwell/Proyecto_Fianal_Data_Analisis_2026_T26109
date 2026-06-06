@@ -167,4 +167,3 @@ with tab3:
     st.subheader("📋 Datos de Marketing y Retornos (agrup_prod_vtas_mkt)")
     st.dataframe(df_mkt_filtrado, use_container_width=True)
 
-
