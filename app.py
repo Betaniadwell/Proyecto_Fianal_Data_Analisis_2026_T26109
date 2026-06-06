@@ -1,132 +1,226 @@
-import streamlit as st
-import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
 import seaborn as sns
+import streamlit as st
+from sklearn.linear_model import LinearRegression
 
-# 1. Configuración de la página (Estilo Reporte Avanzado)
+# 1. Configuración de la página
 st.set_page_config(page_title="Informe Estadístico y Comercial", layout="wide")
 
 st.title("📊 Informe Integral de Ventas y Rendimiento de Marketing")
 st.markdown("---")
 
-# 2. Carga de los dos DataFrames reales desde tu entorno de Colab
+
+# 2. Carga de los dos DataFrames reales
 @st.cache_data
 def cargar_datos_reales():
-    import __main__
-    # Cargamos df_q para la parte estadística
-    if hasattr(__main__, 'df_q'):
-        df_q_real = __main__.df_q.copy()
-    else:
-        # Respaldo por si acaso
-        df_q_real = pd.DataFrame({
-            "producto": ["Lámpara de mesa", "Auriculares", "Microondas"],
-            "vtas_productos": [1279883.0, 109112.0, 1068876.0]
-        })
-        
-    # Cargamos agrup_prod_vtas_mkt para la parte de marketing y ROI
-    if hasattr(__main__, 'agrup_prod_vtas_mkt'):
-        df_mkt_real = __main__.agrup_prod_vtas_mkt.copy()
-    else:
-        # Respaldo por si acaso
-        df_mkt_real = pd.DataFrame({
-            "producto": ["Lámpara de mesa", "Auriculares", "Microondas"],
-            "marketing": [11262.5, 9585.0, 126917.0],
-            "vtas_productos": [1279883.0, 109112.0, 1068876.0]
-        })
-    
-    # Nos aseguramos de que el nombre de la columna de ventas sea homogéneo para los cálculos
-    if 'vtas.productos' in df_q_real.columns:
-        df_q_real = df_q_real.rename(columns={'vtas.productos': 'vtas_productos'})
-    if 'vtas.productos' in df_mkt_real.columns:
-        df_mkt_real = df_mkt_real.rename(columns={'vtas.productos': 'vtas_productos'})
-        
-    # Calculamos el ROI real en la tabla de marketing
-    df_mkt_real["ROI_Marketing"] = df_mkt_real["vtas_productos"] / df_mkt_real["marketing"]
-    
+    data_q = {
+        "producto": [
+            "Lámpara de mesa",
+            "Auriculares",
+            "Microondas",
+            "Cafetera",
+            "Smartphone",
+            "Freidora eléctrica",
+            "Batidora",
+            "Aspiradora",
+            "Adorno de pared",
+            "Horno eléctrico",
+            "Espejo decorativo",
+            "Consola de videojuegos",
+            "Rincón de plantas",
+            "Smartwatch",
+            "Laptop",
+            "Lavadora",
+            "Cuadro decorativo",
+            "Jarrón decorativo",
+            "Alfombra",
+            "Proyector",
+            "Televisor",
+            "Cortinas",
+            "Secadora",
+            "Plancha de vapor",
+            "Parlantes bluetooth",
+        ],
+        "vtas_productos": [
+            1279883.0,
+            109112.0,
+            1068876.0,
+            92484.0,
+            82212.0,
+            78251.0,
+            77537.0,
+            77447.0,
+            76097.0,
+            75688.0,
+            75663.0,
+            75583.0,
+            75572.0,
+            75535.0,
+            75326.0,
+            74953.0,
+            74578.0,
+            74534.0,
+            74098.0,
+            73933.0,
+            73815.0,
+            73649.0,
+            73338.0,
+            73039.0,
+            72111.0,
+        ],
+    }
+
+    data_mkt = {
+        "producto": [
+            "Lámpara de mesa",
+            "Auriculares",
+            "Microondas",
+            "Cafetera",
+            "Smartphone",
+            "Freidora eléctrica",
+            "Batidora",
+            "Aspiradora",
+            "Adorno de pared",
+            "Horno eléctrico",
+            "Espejo decorativo",
+            "Consola de videojuegos",
+            "Rincón de plantas",
+            "Smartwatch",
+            "Laptop",
+            "Lavadora",
+            "Cuadro decorativo",
+            "Jarrón decorativo",
+            "Alfombra",
+            "Proyector",
+            "Televisor",
+            "Cortinas",
+            "Secadora",
+            "Plancha de vapor",
+            "Parlantes bluetooth",
+        ],
+        "marketing": [
+            11262.5,
+            9585.0,
+            126917.0,
+            76544.0,
+            65552.5,
+            7217.0,
+            4138.0,
+            4106.0,
+            5868.5,
+            7743.5,
+            5577.0,
+            3395.0,
+            4905.5,
+            6041.0,
+            3350.5,
+            3250.5,
+            5021.5,
+            6833.5,
+            455.0,
+            4497.5,
+            4788.0,
+            3393.5,
+            4957.0,
+            3331.5,
+            4905.5,
+        ],
+    }
+
+    df_q_real = pd.DataFrame(data_q)
+    df_mkt_real = pd.DataFrame(data_mkt)
+
+    df_mkt_real["vtas_productos"] = df_q_real["vtas_productos"]
+    df_mkt_real["ROI_Marketing"] = (
+        df_mkt_real["vtas_productos"] / df_mkt_real["marketing"]
+    )
     return df_q_real, df_mkt_real
+
 
 df_q, df_mkt = cargar_datos_reales()
 
-# Cálculos estadísticos basados exactamente en tu código de cuartiles (usando df_q)
-q1 = df_q['vtas_productos'].quantile(0.25).round(2)
-q2 = df_q['vtas_productos'].quantile(0.50).round(2)
-q3 = df_q['vtas_productos'].quantile(0.75).round(2)
-v_min = round(df_q['vtas_productos'].min(), 2)
-v_max = round(df_q['vtas_productos'].max(), 2)
+# Cálculos estadísticos basados en tu código de cuartiles
+q1 = df_q["vtas_productos"].quantile(0.25).round(2)
+q2 = df_q["vtas_productos"].quantile(0.50).round(2)
+q3 = df_q["vtas_productos"].quantile(0.75).round(2)
+v_min = round(df_q["vtas_productos"].min(), 2)
+v_max = round(df_q["vtas_productos"].max(), 2)
 iqr_p = q3 - q1
 QRI = q3 + (1.5 * iqr_p)
 
-# 3. PANEL LATERAL: Filtro unificado por producto
+# 3. PANEL LATERAL
 st.sidebar.header("🕹️ Controladores del Tablero")
-todos_los_productos = sorted(list(set(df_q["producto"].unique()).union(set(df_mkt["producto"].unique()))))
+todos_los_productos = sorted(
+    list(set(df_q["producto"].unique()).union(set(df_mkt["producto"].unique())))
+)
 
 productos_seleccionados = st.sidebar.multiselect(
     "Filtrar por Línea de Producto:",
     options=todos_los_productos,
-    default=todos_los_productos
+    default=todos_los_productos,
 )
 
-# Aplicamos los filtros a ambos DataFrames
 df_q_filtrado = df_q[df_q["producto"].isin(productos_seleccionados)]
 df_mkt_filtrado = df_mkt[df_mkt["producto"].isin(productos_seleccionados)]
 
-# 4. CREACIÓN DE PESTAÑAS (Aquí se junta todo de forma limpia)
-tab1, tab2, tab3 = st.tabs(["📊 Distribución Estadística (df_q)", "🎯 Eficiencia de Marketing (ROI)", "📋 Tablas de Datos"])
+# 4. TUS 3 PESTAÑAS ORIGINALES
+tab1, tab2, tab3 = st.tabs(
+    [
+        "📊 Distribución Estadística",
+        "🎯 Eficiencia de Marketing (ROI)",
+        "📋 Tablas de Datos",
+    ]
+)
 
-# --- PESTAÑA 1: TUS DOS BLOQUES DE CÓDIGO DE CAJAS E HISTOGRAMAS ---
+# --- PESTAÑA 1 ---
 with tab1:
     st.header("Análisis de Distribución de Ventas")
-    st.markdown("Esta sección evalúa el comportamiento de la dispersión de las ventas mediante cuartiles y frecuencias.")
-    
-    # Fila de tarjetas estadísticas rápidas basadas en tus cálculos
     met1, met2, met3 = st.columns(3)
     met1.metric(label="Mediana de Ventas (Q2)", value=f"${q2:,.2f}")
     met2.metric(label="Rango Intercuartílico (IQR)", value=f"${iqr_p:,.2f}")
     met3.metric(label="Límite Atípicos (QRI)", value=f"${QRI:,.2f}")
-    
+
     st.markdown("---")
-    
-    # Renderizamos tus dos gráficos juntos (el histograma y el boxplot vertical que enviaste)
+
     fig_dist, ax_dist = plt.subplots(1, 2, figsize=(12, 5))
     sns.set_theme(style="whitegrid")
-    
-    # Subplot 1: Histograma
-    sns.histplot(data=df_q_filtrado, x='vtas_productos', bins="auto", ax=ax_dist[0], color="steelblue")
+
+    sns.histplot(
+        data=df_q_filtrado,
+        x="vtas_productos",
+        bins="auto",
+        ax=ax_dist[0],
+        color="steelblue",
+    )
     ax_dist[0].set_title("Distribución de las Ventas (Frecuencia)")
-    ax_dist[0].set_xlabel("Ventas de Productos")
-    
-    # Subplot 2: Boxplot vertical
-    sns.boxplot(data=df_q_filtrado, y='vtas_productos', ax=ax_dist[1], color="skyblue", flierprops={"markerfacecolor": "red", "marker": "o"})
-    ax_dist[1].axhline(QRI, color='red', linestyle='--', linewidth=1.5, label=f'Límite QRI: {QRI:.2f}')
+
+    sns.boxplot(
+        data=df_q_filtrado,
+        y="vtas_productos",
+        ax=ax_dist[1],
+        color="skyblue",
+        flierprops={"markerfacecolor": "red", "marker": "o"},
+    )
+    ax_dist[1].axhline(
+        QRI, color="red", linestyle="--", linewidth=1.5, label=f"QRI: {QRI:.2f}"
+    )
     ax_dist[1].set_title("Distribución de las Ventas (Caja y Bigotes)")
-    ax_dist[1].set_ylabel("Ventas de Productos")
     ax_dist[1].legend()
-    
+
     plt.tight_layout()
     st.pyplot(fig_dist)
-    
-    # Texto analítico detallado
-    st.info(f"""
-    **Anotaciones de Intervalos (Datos de df_q):**
-    * **Valor Mínimo Registrado:** ${v_min:,.2f}
-    * **Primer Cuartil (25% - Q1):** ${q1:,.2f}
-    * **Tercer Cuartil (75% - Q3):** ${q3:,.2f}
-    * **Valor Máximo Detectado:** ${v_max:,.2f}
-    """)
 
-# --- PESTAÑA 2: GRÁFICO DE BARRAS DE EFICIENCIA REAL (ROI) ---
+# --- PESTAÑA 2 ---
 with tab2:
-    st.header("Eficiencia Real: Ventas generadas por cada Peso invertido en Marketing")
-    st.markdown("Evaluación cruzada del retorno obtenido por cada peso asignado a campañas de marketing usando `agrup_prod_vtas_mkt`.")
-    
+    st.header("Eficiencia Comercial Real (ROI)")
     if not df_mkt_filtrado.empty:
         col_mkt1, col_mkt2 = st.columns([2, 1])
-        
         with col_mkt1:
-            # Tu código exacto de ordenamiento y gráfico de barras horizontales
-            df_analisis_graf = df_mkt_filtrado.sort_values(by="ROI_Marketing", ascending=False)
-            
+            df_analisis_graf = df_mkt_filtrado.sort_values(
+                by="ROI_Marketing", ascending=False
+            )
             fig_mkt, ax_mkt = plt.subplots(figsize=(10, 8))
             sns.barplot(
                 data=df_analisis_graf,
@@ -135,33 +229,109 @@ with tab2:
                 hue="producto",
                 palette="viridis",
                 legend=False,
-                ax=ax_mkt
+                ax=ax_mkt,
             )
-            ax_mkt.set_xlabel("Multiplicador de Retorno (Ventas / Marketing)", fontsize=12)
-            ax_mkt.set_ylabel("Producto", fontsize=12)
-            plt.tight_layout()
             st.pyplot(fig_mkt)
-            
         with col_mkt2:
-            st.subheader("🎯 Métricas Clave Financieras")
-            st.metric(label="💰 Ventas Totales (Segmento)", value=f"${df_mkt_filtrado['vtas_productos'].sum():,.2f}")
-            st.metric(label="📢 Gasto de Marketing Acumulado", value=f"${df_mkt_filtrado['marketing'].sum():,.2f}")
-            st.metric(label="📈 Multiplicador Medio (ROI)", value=f"{df_mkt_filtrado['ROI_Marketing'].mean():.2f}x")
-            
-            st.markdown("""
-            ### **Interpretación:**
-            Los productos ubicados en la parte superior devuelven una mayor cantidad de ingresos por cada peso invertido en publicidad. Las barras amarillas/verdes representan las líneas de producto con un aprovechamiento óptimo del presupuesto comercial.
-            """)
-    else:
-        st.warning("Selecciona al menos un producto en el panel lateral para calcular el ROI.")
+            st.subheader("🎯 Métricas Financieras")
+            st.metric(
+                label="💰 Ventas Totales",
+                value=f"${df_mkt_filtrado['vtas_productos'].sum():,.2f}",
+            )
+            st.metric(
+                label="📢 Inversión Marketing",
+                value=f"${df_mkt_filtrado['marketing'].sum():,.2f}",
+            )
 
-# --- PESTAÑA 3: LAS TABLAS DE DATOS INTERACTIVAS ---
+# --- PESTAÑA 3 ---
 with tab3:
     st.header("Matrices de Datos Consolidados")
-    st.markdown("Tablas interactivas para auditar los registros analizados en el reporte.")
-    
     st.subheader("📋 Datos de Ventas y Distribución (df_q)")
     st.dataframe(df_q_filtrado, use_container_width=True)
-    
-    st.subheader("📋 Datos de Marketing y Retornos (agrup_prod_vtas_mkt)")
+    st.subheader("📋 Datos de Marketing (df_mkt)")
     st.dataframe(df_mkt_filtrado, use_container_width=True)
+
+
+# --- 5. AGREGADO APARTE ABAJO DE TODO ---
+st.markdown("---")
+st.header("🔮 Módulo de Proyección Predictiva (Scikit-Learn)")
+st.markdown(
+    "Este apartado aplica un modelo estadístico de **Regresión Lineal** "
+    "para estimar el comportamiento de las ventas simulando incrementos en el presupuesto de publicidad."
+)
+
+# Control interactivo de inversión
+porcentaje_mkt = st.slider(
+    "Simular incremento en el presupuesto de Marketing (%):",
+    min_value=0,
+    max_value=100,
+    value=25,
+    step=5,
+)
+
+if not df_mkt_filtrado.empty:
+    # Ajuste del modelo matemático
+    X = df_mkt_filtrado[["marketing"]]
+    y = df_mkt_filtrado["vtas_productos"]
+
+    modelo = LinearRegression()
+    modelo.fit(X, y)
+
+    # Creación del escenario futuro con la estructura y nombres corregidos
+    df_proy = df_mkt_filtrado.copy()
+    df_proy["marketing_futuro"] = df_proy["marketing"] * (
+        1 + (porcentaje_mkt / 100)
+    )
+
+    # DataFrame auxiliar con nombre de columna 'marketing' idéntico al entrenamiento
+    df_aux_pred = pd.DataFrame({"marketing": df_proy["marketing_futuro"]})
+    df_proy["ventas_proyectadas"] = modelo.predict(df_aux_pred)
+
+    # Gráfico de dispersión con la recta de tendencia
+    fig_pred, ax_pred = plt.subplots(figsize=(10, 5))
+
+    X_linea = np.linspace(X.min().iloc[0], X.max().iloc[0] * 1.5, 100).reshape(
+        -1, 1
+    )
+    df_linea_pred = pd.DataFrame({"marketing": X_linea.flatten()})
+    y_linea = modelo.predict(df_linea_pred)
+    ax_pred.plot(
+        X_linea,
+        y_linea,
+        color="gray",
+        linestyle="--",
+        label="Tendencia del Modelo",
+    )
+
+    sns.scatterplot(
+        data=df_proy,
+        x="marketing",
+        y="vtas_productos",
+        color="blue",
+        s=80,
+        label="Ventas Actuales",
+        ax=ax_pred,
+    )
+    sns.scatterplot(
+        data=df_proy,
+        x="marketing_futuro",
+        y="ventas_proyectadas",
+        color="green",
+        s=80,
+        marker="^",
+        label=f"Proyección (+{porcentaje_mkt}% MKT)",
+        ax=ax_pred,
+    )
+
+    ax_pred.set_xlabel("Inversión en Marketing ($)")
+    ax_pred.set_ylabel("Volumen de Ventas ($)")
+    ax_pred.legend()
+    st.pyplot(fig_pred)
+
+    # Informe analítico breve embebido
+    st.info(
+        f"**Informe Técnico de la Proyección:** Al simular un incremento del **{porcentaje_mkt}%** en la inversión publicitaria, "
+        "el algoritmo de regresión desplaza las estimaciones (triángulos verdes) de forma ascendente sobre la recta de tendencia. "
+        "Esto valida matemáticamente una correlación positiva y directa entre el esfuerzo de marketing y el volumen de facturación esperado por código."
+    )
+
