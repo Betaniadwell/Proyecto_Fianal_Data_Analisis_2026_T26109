@@ -54,7 +54,7 @@ with tab1:
             st.pyplot(fig_hist)
             
         with col_der:
-            fig_box, ax_box = plt.subplots(figsize=(6, 5))
+            fig_box, ax_box = plt.subplots(figsize=(6, 6))
             sns.boxplot(data=df_q, y='vtas_productos', ax=ax_box, color="skyblue")
             ax_box.set_title("Distribución de las Ventas (Caja y Bigotes)")
             st.pyplot(fig_box)
