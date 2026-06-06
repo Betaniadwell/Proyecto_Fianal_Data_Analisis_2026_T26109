@@ -1,3 +1,4 @@
+
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -12,17 +13,16 @@ st.title("📊 Panel de Control e Informe de Rendimiento Comercial")
 st.markdown("---")
 
 
+# 2. Carga limpia y ultra-compatible de tus archivos reales con búsqueda inteligente
 @st.cache_data
 def cargar_datos_csv():
-    # Buscamos el archivo de ventas en la carpeta actual o subcarpetas
     archivo_ventas = "datos_ventas_reales.csv"
     archivo_mkt = "datos_marketing_reales.csv"
 
-    # Si el archivo de ventas existe, lo lee; si no, intenta buscarlo
+    # Buscar df_q
     if os.path.exists(archivo_ventas):
         df_q = pd.read_csv(archivo_ventas)
     else:
-        # Intento de rescate por si se subió a otra carpeta
         import glob
 
         busqueda = glob.glob("**/" + archivo_ventas, recursive=True)
@@ -31,7 +31,7 @@ def cargar_datos_csv():
         else:
             df_q = pd.DataFrame()
 
-    # Lo mismo para el archivo de marketing
+    # Buscar agrup_mkt
     if os.path.exists(archivo_mkt):
         agrup_mkt = pd.read_csv(archivo_mkt)
     else:
@@ -44,6 +44,11 @@ def cargar_datos_csv():
             agrup_mkt = pd.DataFrame()
 
     return df_q, agrup_mkt
+
+
+# Asignamos las variables globales de forma correcta
+df_q, agrup_prod_vtas_mkt = cargar_datos_csv()
+
 # 3. Creación de las Pestañas de Navegación
 tab1, tab2, tab3 = st.tabs(
     [
@@ -73,7 +78,7 @@ with tab1:
         plt.tight_layout()
         st.pyplot(fig1)
     else:
-        st.warning("⚠️ Falta el archivo 'datos_ventas_reales.csv'")
+        st.warning("⚠️ No se pudieron cargar los datos de ventas.")
 
 # --- PESTAÑA 2: GRÁFICO DE BIGOTES HORIZONTAL CON LÍNEA QRI ---
 with tab2:
