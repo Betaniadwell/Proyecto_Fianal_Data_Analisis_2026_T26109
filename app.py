@@ -12,24 +12,38 @@ st.title("📊 Panel de Control e Informe de Rendimiento Comercial")
 st.markdown("---")
 
 
-# 2. Carga limpia de tus archivos reales
 @st.cache_data
 def cargar_datos_csv():
-    df_q = (
-        pd.read_csv("datos_ventas_reales.csv")
-        if os.path.exists("datos_ventas_reales.csv")
-        else pd.DataFrame()
-    )
-    agrup_mkt = (
-        pd.read_csv("datos_marketing_reales.csv")
-        if os.path.exists("datos_marketing_reales.csv")
-        else pd.DataFrame()
-    )
+    # Buscamos el archivo de ventas en la carpeta actual o subcarpetas
+    archivo_ventas = "datos_ventas_reales.csv"
+    archivo_mkt = "datos_marketing_reales.csv"
+
+    # Si el archivo de ventas existe, lo lee; si no, intenta buscarlo
+    if os.path.exists(archivo_ventas):
+        df_q = pd.read_csv(archivo_ventas)
+    else:
+        # Intento de rescate por si se subió a otra carpeta
+        import glob
+
+        busqueda = glob.glob("**/" + archivo_ventas, recursive=True)
+        if busqueda:
+            df_q = pd.read_csv(busqueda[0])
+        else:
+            df_q = pd.DataFrame()
+
+    # Lo mismo para el archivo de marketing
+    if os.path.exists(archivo_mkt):
+        agrup_mkt = pd.read_csv(archivo_mkt)
+    else:
+        import glob
+
+        busqueda = glob.glob("**/" + archivo_mkt, recursive=True)
+        if busqueda:
+            agrup_mkt = pd.read_csv(busqueda[0])
+        else:
+            agrup_mkt = pd.DataFrame()
+
     return df_q, agrup_mkt
-
-
-df_q, agrup_prod_vtas_mkt = cargar_datos_csv()
-
 # 3. Creación de las Pestañas de Navegación
 tab1, tab2, tab3 = st.tabs(
     [
