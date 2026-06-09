@@ -225,6 +225,16 @@ with tab4:
                 **📈 Motores de Caja Estables (Línea Central):**
                 * Las burbujas verdes demuestran un rendimiento constante entre \$600K y \$800K. Responden bien a aumentos de presupuesto, pero muestran un efecto de saturación al llegar al límite de su mercado.
                 """)
+            
+            with col_info2:
+                st.error("""
+                **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
+                * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
+                * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
+                """)
+           else:
+                st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
+
            with col_info2:
                 st.error("""
                 **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
