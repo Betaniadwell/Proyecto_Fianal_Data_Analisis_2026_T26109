@@ -1,4 +1,3 @@
-# --- NUEVA PESTAÑA 2: DETECCIÓN DE ATÍPICOS (QRI) ---
 with tab2:
     st.header("🎯 Detección de Atípicos (Rango Intercuartílico)")
     
