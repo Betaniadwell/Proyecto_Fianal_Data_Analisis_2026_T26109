@@ -36,7 +36,7 @@ df_q, agrup_prod_vtas_mkt = cargar_datos_csv()
 # 3. Creación de las 4 Pestañas de Navegación
 tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Distribución y Análisis Estadístico",
-    "🎯 Detección de Atípicos (QRI)",
+    "🎯 Detección de Atípicos (Vallas de Tukey)",
     "📈 Eficiencia de Marketing (ROI)",
     "🌌 Gráfico de Dispersión Comercial"
 ])
@@ -63,9 +63,9 @@ with tab1:
         st.warning("⚠️ No se pudieron cargar los datos de ventas para esta pestaña.")
 
 
-# --- PESTAÑA 2: DETECCIÓN DE ATÍPICOS (QRI) ---
+# --- PESTAÑA 2: DETECCIÓN DE ATÍPICOS (VALLAS DE TUKEY) ---
 with tab2:
-    st.header("🎯 Detección de Atípicos (Rango Intercuartílico)")
+    st.header("🎯 Detección de Atípicos (Método de Vallas de Tukey)")
     
     if not df_q.empty:
         # 1. Cálculos estadísticos en tiempo real
@@ -75,11 +75,14 @@ with tab2:
         v_min = round(df_q['vtas_productos'].min(), 2)
         v_max = round(df_q['vtas_productos'].max(), 2)
         
-        iqr_p = q3 - q1
-        QRI = q3 + (1.5 * iqr_p)
+        # El QRI mide la distancia (el ancho de la caja azul)
+        qri_distancia = q3 - q1
         
-        # Filtrado de registros que superan el límite QRI
-        atipicos = df_q[df_q['vtas_productos'] > QRI].copy()
+        # La posición del límite matemático en el eje es la Valla Superior de Tukey
+        valla_tukey_sup = q3 + (1.5 * qri_distancia)
+        
+        # Filtrado de registros que superan la Valla Superior de Tukey
+        atipicos = df_q[df_q['vtas_productos'] > valla_tukey_sup].copy()
 
         # Diseño de dos columnas: Datos a la izquierda, Gráfico a la derecha
         col_datos, col_grafico = st.columns(2)
@@ -88,16 +91,17 @@ with tab2:
             st.subheader("📋 Resumen de Intervalos")
             st.markdown(f"""
             * **Mínimo:** ${v_min:,.2f}
-            * **Primer Cuartil (q1):** ${q1:,.2f}
-            * **Mediana (q2):** ${q2:,.2f}
-            * **Tercer Cuartil (q3):** ${q3:,.2f}
+            * **Primer Cuartil (Q1):** ${q1:,.2f}
+            * **Mediana (Q2):** ${q2:,.2f}
+            * **Tercer Cuartil (Q3 / Límite 75%):** ${q3:,.2f}
             * **Máximo:** ${v_max:,.2f}
             """)
-            st.info(f"**Línea Límite de Atípicos (QRI):** ${QRI:,.2f}")
+            st.info(f"📐 **Rango Intercuartílico (QRI - Ancho de Caja):** ${qri_distancia:,.2f}")
+            st.error(f"🛑 **Valla de Tukey (Límite Atípicos):** ${valla_tukey_sup:,.2f}")
             
             # Muestra cuántos registros superan el límite
             if not atipicos.empty:
-                st.error(f"⚠️ Se detectaron **{len(atipicos)}** registros atípicos por encima del límite.")
+                st.warning(f"⚠️ Se detectaron **{len(atipicos)}** registros atípicos por encima del límite.")
             else:
                 st.success("✅ No se detectaron valores atípicos superiores.")
 
@@ -113,10 +117,13 @@ with tab2:
                 ax=ax_qri
             )
             
-            # Línea roja de corte
-            ax_qri.axvline(QRI, color='red', linestyle='--', linewidth=2, label=f'Límite QRI: {QRI:,.2f}')
+            # Dibujamos la Valla de Tukey (Límite real de atípicos)
+            ax_qri.axvline(valla_tukey_sup, color='red', linestyle='--', linewidth=2, label=f'Valla de Tukey: {valla_tukey_sup:,.2f}')
             
-            ax_qri.set_title('Distribución de Ventas con Límite de Atípicos', fontsize=14, pad=15)
+            # Agregamos la línea de Q3 para verificar la cercanía de superposición en pantalla
+            ax_qri.axvline(q3, color='orange', linestyle=':', linewidth=2, label=f'Q3 (75%): {q3:,.2f}')
+            
+            ax_qri.set_title('Distribución de Ventas con Límites Estadísticos', fontsize=14, pad=15)
             ax_qri.set_xlabel('Ventas de Productos ($)', fontsize=12)
             ax_qri.legend()
             
@@ -144,7 +151,7 @@ with tab2:
                 }
             )
         else:
-            st.info(f"No hay filas para mostrar ya que ningún registro supera el límite estadístico.")
+            st.info(f"No hay filas para mostrar ya que ningún registro supera el límite estadístico de la valla.")
             
     else:
         st.warning("⚠️ No hay datos disponibles para el análisis QRI.")
@@ -222,7 +229,3 @@ with tab4:
                 st.error("""
                 **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
                 * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
-                * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
-                """)
-        else:
-            st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
