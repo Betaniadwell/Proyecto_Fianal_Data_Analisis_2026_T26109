@@ -181,6 +181,7 @@ with tab3:
 
 
 # --- PESTAÑA 4: GRÁFICO DE DISPERSIÓN COMERCIAL + CONCLUSIONES ---
+# --- PESTAÑA 4: GRÁFICO DE DISPERSIÓN COMERCIAL + CONCLUSIONES ---
 with tab4:
     st.header("Análisis de Dispersión: Inversión vs. Ventas")
     st.markdown("Este gráfico permite visualizar qué productos tienen mayor tracción comercial en relación con su presupuesto asignado.")
@@ -232,16 +233,7 @@ with tab4:
                 * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
                 * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
                 """)
-            else:
-                st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
-
-            with col_info2:
-                st.error("""
-                **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
-                * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
-                * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
-                """) # <--- REVISA QUE TENGA ESTAS COMILLAS Y EL PARÉNTESIS DE CIERRE
-            else:
-                st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
-
-           
+        else:
+            st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
+    else:
+        st.warning("⚠️ No se encontraron datos para mostrar el gráfico de dispersión.")
