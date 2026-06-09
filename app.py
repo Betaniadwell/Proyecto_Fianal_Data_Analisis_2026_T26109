@@ -232,16 +232,16 @@ with tab4:
                 * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
                 * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
                 """)
-           else:
+            else:
                 st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
 
-           with col_info2:
+            with col_info2:
                 st.error("""
                 **⚠️ Alertas de Pérdida / Ineficiencia (Zona Inferior):**
                 * Las burbujas amarillas y pequeñas representan productos que, a pesar de recibir inversión constante (\$5K+), devuelven muy pocas ventas (menos de \$400K).
                 * *Acción recomendada:* Pausar o reestructurar de inmediato las campañas publicitarias de estos artículos.
                 """) # <--- REVISA QUE TENGA ESTAS COMILLAS Y EL PARÉNTESIS DE CIERRE
-           else:
-            st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
+            else:
+                st.info("💡 El archivo debe contener las columnas 'marketing' y 'vtas_productos'.")
 
            
