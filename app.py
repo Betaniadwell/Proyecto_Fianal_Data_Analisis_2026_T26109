@@ -222,35 +222,54 @@ with tab4:
     st.header("🌌 Gráfico de Dispersión Comercial: Ventas vs Marketing")
     
     if not agrup_prod_vtas_mkt.empty:
-        st.markdown("Este análisis permite evaluar de forma relacional qué impacto real genera la inversión en marketing sobre el volumen total de ventas por producto.")
+        st.markdown("Este análisis permite evaluar de forma relacional qué impacto real genera la inversión en marketing sobre el volumen total de ventas por producto. Pasa el cursor sobre los puntos para inspeccionar cada registro.")
         
-        # Construcción del gráfico de dispersión interactivo con Plotly
+        # Filtramos el Top 3 para dejarles el texto fijo y que el resto no sature la pantalla
+        top_3_productos = agrup_prod_vtas_mkt.head(3)['producto'].tolist()
+        
+        # Creamos una columna de texto condicional: solo muestra el nombre si es del Top 3
+        textos_visibles = [
+            prod if prod in top_3_productos else "" 
+            for prod in agrup_prod_vtas_mkt['producto']
+        ]
+        
         fig_scatter = go.Figure()
         
         fig_scatter.add_trace(go.Scatter(
             x=agrup_prod_vtas_mkt['marketing'],
             y=agrup_prod_vtas_mkt['vtas_productos'],
-            mode='markers+text',
-            text=agrup_prod_vtas_mkt['producto'],
+            mode='markers+text', # Mantiene marcadores y texto controlado
+            text=textos_visibles, # Solo dibuja el texto del Top 3
             textposition="top center",
+            textfont=dict(size=11, color="white" if st.get_option("theme.base") == "dark" else "black"),
             marker=dict(
                 size=14,
                 color=agrup_prod_vtas_mkt['vtas_productos'],
                 colorscale='Viridis',
                 showscale=True,
-                colorbar=dict(title="Ventas ($)")
+                colorbar=dict(title="Ventas ($)", tickformat="$,.0s")
             ),
-            hovertemplate="<b>Producto:</b> %{text}<br>" +
-                          "<b>Inversión Mkt:</b> $%{x:,.2f}<br>" +
-                          "<b>Ventas Totales:</b> $%{y:,.2f}<extra></extra>"
+            # Cartel interactivo optimizado al pasar el mouse
+            hovertemplate="<b>📦 Producto:</b> %{customdata}<br>" +
+                          "<b>💰 Inversión Mkt:</b> $%{x:,.2f}<br>" +
+                          "<b>📈 Ventas Totales:</b> $%{y:,.2f}<extra></extra>",
+            customdata=agrup_prod_vtas_mkt['producto']
         ))
         
         fig_scatter.update_layout(
             template="plotly_white",
-            xaxis=dict(title="Inversión en Marketing ($)", tickformat="$,.0f"),
-            yaxis=dict(title="Ventas del Producto ($)", tickformat="$,.0f"),
+            xaxis=dict(
+                title="Inversión en Marketing ($)", 
+                tickformat="$,.0f",
+                gridcolor="rgba(255,255,255,0.1)" # Cuadrícula sutil para entornos oscuros
+            ),
+            yaxis=dict(
+                title="Ventas del Producto ($)", 
+                tickformat="$,.0f",
+                gridcolor="rgba(255,255,255,0.1)"
+            ),
             height=550,
-            margin=dict(l=40, r=40, t=40, b=40)
+            margin=dict(l=50, r=40, t=40, b=50)
         )
         
         st.plotly_chart(fig_scatter, use_container_width=True)
