@@ -20,16 +20,17 @@ def cargar_datos_csv():
     def buscar_y_leer(nombre_archivo):
         if os.path.exists(nombre_archivo):
             return pd.read_csv(nombre_archivo)
-         b = glob.glob("**/" + nombre_archivo, recursive=True)
+        
+        # Aquí corregimos la alineación (4 espacios para la función, 4 para el if)
+        b = glob.glob("**/" + nombre_archivo, recursive=True)
         if b:
-            return pd.read_csv(b[0])
+            return pd.read_csv(b[0]) # Agregamos [0] para leer el primer archivo encontrado
         return pd.DataFrame()
 
     df_q = buscar_y_leer(archivo_ventas)
     agrup_mkt = buscar_y_leer(archivo_mkt)
     return df_q, agrup_mkt
 
-df_q, agrup_prod_vtas_mkt = cargar_datos_csv()
 
 # 3. Creación de las 4 Pestañas de Navegación
 tab1, tab2, tab3, tab4 = st.tabs([
