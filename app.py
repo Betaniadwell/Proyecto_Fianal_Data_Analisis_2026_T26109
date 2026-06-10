@@ -15,27 +15,26 @@ st.markdown("---")
 @st.cache_data
 def cargar_datos_csv():
     archivo_ventas = "datos_ventas_perfectos.csv"
-    archivo_mkt = "datos_roi_perfectos.csv"
+    archivo_mkt = "datos_agrupados_marketing.csv"  # El nuevo archivo independiente
 
     def buscar_y_leer(nombre_archivo):
         if os.path.exists(nombre_archivo):
             return pd.read_csv(nombre_archivo)
-        
-        # Aquí corregimos la alineación (4 espacios para la función, 4 para el if)
         b = glob.glob("**/" + nombre_archivo, recursive=True)
         if b:
-            return pd.read_csv(b[0]) # Agregamos [0] para leer el primer archivo encontrado
+            return pd.read_csv(b[0])  # Toma la primera coincidencia encontrada en la lista
         return pd.DataFrame()
 
     df_q = buscar_y_leer(archivo_ventas)
     agrup_mkt = buscar_y_leer(archivo_mkt)
     return df_q, agrup_mkt
 
+df_q, agrup_prod_vtas_mkt = cargar_datos_csv()
 
 # 3. Creación de las 4 Pestañas de Navegación
 tab1, tab2, tab3, tab4 = st.tabs([
     "📊 Distribución y Análisis Estadístico",
-    "🎯 Detección de Atípicos (Vallas de Tukey)",
+    "🎯 Detección de Atípicos (QRI)",
     "📈 Eficiencia de Marketing (ROI)",
     "🌌 Gráfico de Dispersión Comercial"
 ])
@@ -46,11 +45,10 @@ with tab1:
     
     if not df_q.empty:
         col_izq, col_der = st.columns(2)
+        col_vta = 'vtas_productos' if 'vtas_productos' in df_q.columns else df_q.columns[0]
         
         with col_izq:
             fig_hist, ax_hist = plt.subplots(figsize=(6, 5))
-            # Se verifica si la columna es 'vtas_productos' o 'precio' según tus datos limpios
-            col_vta = 'vtas_productos' if 'vtas_productos' in df_q.columns else df_q.columns[1]
             sns.histplot(data=df_q, x=col_vta, bins="auto", ax=ax_hist, color="steelblue")
             ax_hist.set_title("Distribución de las Ventas (Histograma)")
             st.pyplot(fig_hist)
@@ -64,12 +62,12 @@ with tab1:
         st.warning("⚠️ No se pudieron cargar los datos de ventas para esta pestaña.")
 
 
-# --- PESTAÑA 2: DETECCIÓN DE ATÍPICOS (VALLAS DE TUKEY) ---
+# --- NUEVA PESTAÑA 2: DETECCIÓN DE ATÍPICOS (QRI) ---
 with tab2:
-    st.header("🎯 Detección de Atípicos (Método de Vallas de Tukey)")
+    st.header("🎯 Detección de Atípicos (Rango Intercuartílico)")
     
     if not df_q.empty:
-        col_vta = 'vtas_productos' if 'vtas_productos' in df_q.columns else df_q.columns[1]
+        col_vta = 'vtas_productos' if 'vtas_productos' in df_q.columns else df_q.columns[0]
         
         # 1. Cálculos estadísticos en tiempo real
         q1 = df_q[col_vta].quantile(0.25).round(2)
@@ -78,54 +76,89 @@ with tab2:
         v_min = round(df_q[col_vta].min(), 2)
         v_max = round(df_q[col_vta].max(), 2)
         
-        qri_distancia = q3 - q1
-        valla_tukey_sup = q3 + (1.5 * qri_distancia)
-        atipicos = df_q[df_q[col_vta] > valla_tukey_sup].copy()
+        iqr_p = q3 - q1
+        QRI = q3 + (1.5 * iqr_p)
+        
+        # Filtrado de registros que superan el límite QRI
+        atipicos = df_q[df_q[col_vta] > QRI].copy()
 
+        # Diseño de dos columnas: Datos a la izquierda, Gráfico a la derecha
         col_datos, col_grafico = st.columns(2)
         
         with col_datos:
             st.subheader("📋 Resumen de Intervalos")
             st.markdown(f"""
             * **Mínimo:** ${v_min:,.2f}
-            * **Primer Cuartil (Q1):** ${q1:,.2f}
-            * **Mediana (Q2):** ${q2:,.2f}
-            * **Tercer Cuartil (Q3 / Límite 75%):** ${q3:,.2f}
+            * **Primer Cuartil (q1):** ${q1:,.2f}
+            * **Mediana (q2):** ${q2:,.2f}
+            * **Tercer Cuartil (q3):** ${q3:,.2f}
             * **Máximo:** ${v_max:,.2f}
             """)
-            st.info(f"📐 **Rango Intercuartílico (QRI - Ancho de Caja):** ${qri_distancia:,.2f}")
-            st.error(f"🛑 **Valla de Tukey (Límite Atípicos):** ${valla_tukey_sup:,.2f}")
+            st.info(f"**Línea Límite de Atípicos (QRI):** ${QRI:,.2f}")
             
+            # Muestra cuántos registros superan el límite
             if not atipicos.empty:
-                st.warning(f"⚠️ Se detectaron **{len(atipicos)}** registros atípicos por encima del límite.")
+                st.error(f"⚠️ Se detectaron **{len(atipicos)}** registros atípicos por encima del límite.")
             else:
                 st.success("✅ No se detectaron valores atípicos superiores.")
 
         with col_grafico:
-            # 2. Renderizado del Gráfico de Cajas personalizado corregido
+            # 2. Renderizado del Gráfico de Cajas personalizado
             fig_qri, ax_qri = plt.subplots(figsize=(10, 4.5))
             sns.set_theme(style="whitegrid")
+            
             sns.boxplot(
                 x=df_q[col_vta], 
                 color="skyblue", 
-                flierprops={"markerfacecolor": "red", "marker": "D"},
+                flierprops={"markerfacecolor": "red", "marker": "o", "markersize": 8},
                 ax=ax_qri
             )
-            ax_qri.axvline(valla_tukey_sup, color="red", linestyle="--", label="Valla de Tukey")
-            ax_qri.set_title("Identificación Visual de Valores Atípicos")
+            
+            # Línea roja de corte
+            ax_qri.axvline(QRI, color='red', linestyle='--', linewidth=2, label=f'Límite QRI: {QRI:,.2f}')
+            
+            ax_qri.set_title('Distribución de Ventas con Límite de Atípicos', fontsize=14, pad=15)
+            ax_qri.set_xlabel('Ventas de Productos ($)', fontsize=12)
             ax_qri.legend()
+            
             st.pyplot(fig_qri)
+            
+        # --- NUEVA SECCIÓN: TABLA DE PRODUCTOS ATÍPICOS ---
+        st.markdown("---")
+        st.subheader("🔍 Listado Detallado de Ventas Atípicas")
+        
+        if not atipicos.empty:
+            st.markdown("Los siguientes registros representan transacciones o productos con un volumen de ventas excepcionalmente alto:")
+            
+            # Ordenamos de mayor a menor venta para destacar los más importantes
+            atipicos_ordenados = atipicos.sort_values(by=col_vta, ascending=False)
+            
+            # Mostramos la tabla formateada con Streamlit
+            st.dataframe(
+                atipicos_ordenados, 
+                use_container_width=True,
+                column_config={
+                    col_vta: st.column_config.NumberColumn(
+                        "Ventas de Productos",
+                        format="$%,.2f"
+                    )
+                }
+            )
+        else:
+            st.info(f"No hay filas para mostrar ya que ningún registro supera el límite estadístico de {QRI:,.2f}.")
+            
+    else:
+        st.warning("⚠️ No hay datos disponibles para el análisis QRI.")
 
 
-# --- PESTAÑA 3: EFICIENCIA DE MARKETING (GRÁFICO INTERACTIVO DE COLAB) ---
+# --- PESTAÑA 3: EFICIENCIA DE MARKETING (ROI) CON GRÁFICO NUEVO ---
 with tab3:
     st.header("📈 Eficiencia de Marketing (ROI)")
     
     if not agrup_prod_vtas_mkt.empty:
-        # Se verifica la estructura del dataframe cargado desde el CSV
         st.subheader("Análisis de Inversión: Ventas vs Marketing (Top 5 Productos)")
         
-        # Preparación de datos (Top 5 con el ajuste x50 de Colab)
+        # Preparación de datos basándose en tu DataFrame agrupado de Colab
         top_smart = agrup_prod_vtas_mkt.head(5).copy()
         top_smart['marketing_visual'] = top_smart['marketing'] * 50
 
@@ -160,7 +193,7 @@ with tab3:
             hovertemplate='<b>Gasto Real:</b> $%{customdata:,.2f}<extra></extra>'
         ))
 
-        # Diseño del Layout adaptado para la Web de Streamlit
+        # Diseño Final del Layout para Web
         fig.update_layout(
             barmode='overlay',
             template="plotly_white",
@@ -171,18 +204,18 @@ with tab3:
             height=500
         )
 
-        # Ajuste de grosores de barra
+        # Ajuste de grosores
         fig.update_traces(width=0.6, selector=dict(name='Ventas Totales'))
         fig.update_traces(width=0.45, selector=dict(name='Marketing (Impacto x50)'))
 
-        # Despliegue responsivo de Plotly en Streamlit (Usa todo el ancho sin deformarse)
+        # Despliegue responsivo de Plotly en Streamlit
         st.plotly_chart(fig, use_container_width=True)
         
-        # Opcional: Mostrar la tabla detallada abajo del gráfico
-        with st.expander("🔍 Ver Tabla de Datos de Marketing y Ventas"):
+        # Despliegue de la nueva tabla agregada abajo del gráfico
+        with st.expander("🔍 Ver Tabla de Datos de Marketing y Ventas (Subida desde Git)"):
             st.dataframe(agrup_prod_vtas_mkt, use_container_width=True)
     else:
-        st.warning("⚠️ No se encontró el archivo 'datos_roi_perfectos.csv'. Súbelo desde Colab para calcular los gráficos.")
+        st.warning("⚠️ No se encontró el archivo 'datos_agrupados_marketing.csv'. Verifica haberlo subido desde Colab.")
 
 
 # --- PESTAÑA 4: GRÁFICO DE DISPERSIÓN ---
