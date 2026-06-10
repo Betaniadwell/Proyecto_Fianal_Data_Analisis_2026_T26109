@@ -12,7 +12,6 @@ st.title("📊 Panel de Control e Informe de Rendimiento Comercial")
 st.markdown("---")
 
 # 2. Carga de los DataFrames reales
-@st.cache_data
 def cargar_datos_csv():
     archivo_ventas = "datos_ventas_perfectos.csv"
     archivo_mkt = "datos_agrupados_marketing.csv"  # El nuevo archivo independiente
