@@ -218,7 +218,42 @@ with tab3:
         st.warning("⚠️ No se encontró el archivo 'datos_agrupados_marketing.csv'. Verifica haberlo subido desde Colab.")
 
 
-# --- PESTAÑA 4: GRÁFICO DE DISPERSIÓN ---
+# --- PESTAÑA 4: GRÁFICO DE DISPERSIÓN COMERCIAL ---
 with tab4:
-    st.header("🌌 Gráfico de Dispersión Comercial")
-    st.markdown("Sección reservada para el análisis relacional de variables comerciales.")
+    st.header("🌌 Gráfico de Dispersión Comercial: Ventas vs Marketing")
+    
+    if not agrup_prod_vtas_mkt.empty:
+        st.markdown("Este análisis permite evaluar de forma relacional qué impacto real genera la inversión en marketing sobre el volumen total de ventas por producto.")
+        
+        # Construcción del gráfico de dispersión interactivo con Plotly
+        fig_scatter = go.Figure()
+        
+        fig_scatter.add_trace(go.Scatter(
+            x=agrup_prod_vtas_mkt['marketing'],
+            y=agrup_prod_vtas_mkt['vtas_productos'],
+            mode='markers+text',
+            text=agrup_prod_vtas_mkt['producto'],
+            textposition="top center",
+            marker=dict(
+                size=14,
+                color=agrup_prod_vtas_mkt['vtas_productos'],
+                colorscale='Viridis',
+                showscale=True,
+                colorbar=dict(title="Ventas ($)")
+            ),
+            hovertemplate="<b>Producto:</b> %{text}<br>" +
+                          "<b>Inversión Mkt:</b> $%{x:,.2f}<br>" +
+                          "<b>Ventas Totales:</b> $%{y:,.2f}<extra></extra>"
+        ))
+        
+        fig_scatter.update_layout(
+            template="plotly_white",
+            xaxis=dict(title="Inversión en Marketing ($)", tickformat="$,.0f"),
+            yaxis=dict(title="Ventas del Producto ($)", tickformat="$,.0f"),
+            height=550,
+            margin=dict(l=40, r=40, t=40, b=40)
+        )
+        
+        st.plotly_chart(fig_scatter, use_container_width=True)
+    else:
+        st.warning("⚠️ No hay datos agrupados disponibles para generar el gráfico de dispersión.")
