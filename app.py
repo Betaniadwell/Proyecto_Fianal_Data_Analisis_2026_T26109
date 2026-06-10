@@ -224,10 +224,10 @@ with tab4:
     if not agrup_prod_vtas_mkt.empty:
         st.markdown("Este análisis permite evaluar de forma relacional qué impacto real genera la inversión en marketing sobre el volumen total de ventas por producto. Pasa el cursor sobre los puntos para inspeccionar cada registro.")
         
-        # Filtramos el Top 3 para dejarles el texto fijo y que el resto no sature la pantalla
+        # Filtramos el Top 3 para dejarles el texto fijo
         top_3_productos = agrup_prod_vtas_mkt.head(3)['producto'].tolist()
         
-        # Creamos una columna de texto condicional: solo muestra el nombre si es del Top 3
+        # Creamos la lista de etiquetas fijas
         textos_visibles = [
             prod if prod in top_3_productos else "" 
             for prod in agrup_prod_vtas_mkt['producto']
@@ -238,10 +238,15 @@ with tab4:
         fig_scatter.add_trace(go.Scatter(
             x=agrup_prod_vtas_mkt['marketing'],
             y=agrup_prod_vtas_mkt['vtas_productos'],
-            mode='markers+text', # Mantiene marcadores y texto controlado
-            text=textos_visibles, # Solo dibuja el texto del Top 3
+            mode='markers+text', 
+            text=textos_visibles, 
             textposition="top center",
-            textfont=dict(size=11, color="white" if st.get_option("theme.base") == "dark" else "black"),
+            # FORZAMOS COLOR BLANCO DIRECTO PARA EL MODO OSCURO
+            textfont=dict(
+                size=12, 
+                color="white",  # Cambiado a blanco directo para legibilidad total
+                family="Arial Black"
+            ),
             marker=dict(
                 size=14,
                 color=agrup_prod_vtas_mkt['vtas_productos'],
@@ -249,19 +254,19 @@ with tab4:
                 showscale=True,
                 colorbar=dict(title="Ventas ($)", tickformat="$,.0s")
             ),
-            # Cartel interactivo optimizado al pasar el mouse
             hovertemplate="<b>📦 Producto:</b> %{customdata}<br>" +
                           "<b>💰 Inversión Mkt:</b> $%{x:,.2f}<br>" +
                           "<b>📈 Ventas Totales:</b> $%{y:,.2f}<extra></extra>",
             customdata=agrup_prod_vtas_mkt['producto']
         ))
         
+        # Ajustamos el layout para que sea compatible con entornos oscuros
         fig_scatter.update_layout(
-            template="plotly_white",
+            template="plotly_dark",  # Cambiamos a plantilla oscura para que combine con tu entorno web
             xaxis=dict(
                 title="Inversión en Marketing ($)", 
                 tickformat="$,.0f",
-                gridcolor="rgba(255,255,255,0.1)" # Cuadrícula sutil para entornos oscuros
+                gridcolor="rgba(255,255,255,0.1)"
             ),
             yaxis=dict(
                 title="Ventas del Producto ($)", 
@@ -274,4 +279,4 @@ with tab4:
         
         st.plotly_chart(fig_scatter, use_container_width=True)
     else:
-        st.warning("⚠️ No hay datos agrupados disponibles para generar el gráfico de dispersión.")
+        st.warning("⚠️ No hay datos agrupados disponibles para generar el gráfico de distribución.")
